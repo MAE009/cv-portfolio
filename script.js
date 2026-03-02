@@ -1,4 +1,6 @@
 // ===== GESTION DE LA PERSISTANCE DES DONNÉES =====
+// Remplacez la variable cvData par des appels API
+const API_URL = 'https://cv-portfolio-api.onrender.com';
 
 // Charger les données depuis le localStorage ou utiliser les données par défaut
 function loadCVData() {
@@ -60,6 +62,40 @@ document.addEventListener('DOMContentLoaded', function() {
     // Pour déboguer : afficher les données dans la console
     console.log('CV disponibles:', cvData.cvs.length);
 });
+
+
+// Charger les CV
+async function loadCVs() {
+  const response = await fetch(`${API_URL}/cvs`);
+  return await response.json();
+}
+
+// Ajouter un CV
+async function addCV(cv) {
+  const response = await fetch(`${API_URL}/cvs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cv)
+  });
+  return await response.json();
+}
+
+// Modifier un CV
+async function updateCV(id, cv) {
+  const response = await fetch(`${API_URL}/cvs/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cv)
+  });
+  return await response.json();
+}
+
+// Supprimer un CV
+async function deleteCV(id) {
+  await fetch(`${API_URL}/cvs/${id}`, {
+    method: 'DELETE'
+  });
+}
 
 // ===== FONCTIONS PAGE ACCUEIL =====
 function afficherCVAccueil() {
