@@ -1,6 +1,6 @@
 // ===== GESTION DE LA PERSISTANCE DES DONNÉES =====
 // Remplacez la variable cvData par des appels API
-const API_URL = 'https://cv-portfolio-api.onrender.com';
+const API_URL = 'https://cv-portfolio-api-29ui.onrender.com';
 
 // Charger les données depuis le localStorage ou utiliser les données par défaut
 function loadCVData() {
