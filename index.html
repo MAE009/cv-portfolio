@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAYALA CV Portfolio - Accueil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-file-alt"></i>
+                MAYALA<span>Portfolio</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active"><i class="fas fa-home"></i> Accueil</a></li>
+                <li><a href="admin.html"><i class="fas fa-cog"></i> Administration</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Portfolio de CV Professionnels</h1>
+            <p>Découvrez les CV de MAYALA Armand Emmanuel</p>
+        </section>
+
+        <!-- Filtres améliorés -->
+        <div class="filters-card">
+            <div class="filters-header">
+                <i class="fas fa-filter"></i>
+                <h3>Filtrer les CV</h3>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-tag"></i> Type de CV</label>
+                    <select id="filtre-type" class="filter-select">
+                        <option value="tous">Tous les types</option>
+                        <option value="ATS">ATS</option>
+                        <option value="Moderne">Moderne</option>
+                        <option value="Creatif">Créatif</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i> Recherche</label>
+                    <input type="text" id="recherche" class="filter-input" placeholder="Nom ou entreprise...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Grille des CV -->
+        <div id="liste-cv" class="cv-grid">
+            <!-- Les CVs seront chargés ici -->
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 MAYALA Armand Emmanuel - Tous droits réservés</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

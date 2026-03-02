@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - MAYALA CV Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-file-alt"></i>
+                MAYALA<span>Portfolio</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                <li><a href="admin.html" class="active"><i class="fas fa-cog"></i> Administration</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section Admin -->
+        <section class="hero admin-hero">
+            <h1><i class="fas fa-crown"></i> Espace Administration</h1>
+            <p>Gérez votre portfolio de CV en toute simplicité</p>
+        </section>
+
+        <!-- Formulaire d'ajout/modification -->
+        <div class="form-card">
+            <div class="form-header">
+                <i class="fas fa-plus-circle"></i>
+                <h2 id="form-title">Ajouter un nouveau CV</h2>
+            </div>
+
+            <form id="cv-form">
+                <input type="hidden" id="cv-id">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nom complet</label>
+                        <input type="text" id="nom" placeholder="Ex: MAYALA Armand Emmanuel" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Type de CV</label>
+                        <select id="type" required>
+                            <option value="">Sélectionnez un type</option>
+                            <option value="ATS">📄 ATS (Optimisé recruteur)</option>
+                            <option value="Moderne">🎨 Moderne</option>
+                            <option value="Creatif">✨ Créatif</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Entreprise</label>
+                        <input type="text" id="entreprise" placeholder="Ex: TechCorp" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="description" rows="4" placeholder="Description du CV..." required></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-file-pdf"></i> Fichier PDF</label>
+                        <div class="file-upload-area" id="dropZone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Glissez-déposez votre fichier PDF ici</p>
+                            <span>ou</span>
+                            <button type="button" class="btn-browse" onclick="document.getElementById('fichier').click()">
+                                Parcourir
+                            </button>
+                            <input type="file" id="fichier" accept=".pdf" style="display: none;">
+                            <div id="file-info" class="file-info"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                    <button type="button" class="btn-secondary" id="btn-annuler">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Liste des CV pour administration -->
+        <div class="admin-list">
+            <div class="list-header">
+                <i class="fas fa-list"></i>
+                <h2>CV existants</h2>
+            </div>
+            <div id="admin-liste-cv" class="admin-cv-list">
+                <!-- Les CVs seront chargés ici -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 MAYALA Armand Emmanuel - Tous droits réservés</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "cvs": [
+    {
+      "id": 1,
+      "nom": "MAYALA",
+      "type": "Moderne",
+      "entreprise": "TechCorp",
+      "description": "CV moderne avec une approche design et des compétences techniques.",
+      "fichier": "uploads/MAYALA_CV_cv_etudiant.pdf",
+      "date_ajout": "2025-06-15"
+    },
+    {
+      "id": 2,
+      "nom": "MAYALA",
+      "type": "ATS",
+      "entreprise": "FinancePlus",
+      "description": "CV optimisé pour les systèmes ATS, parfait pour les grandes entreprises.",
+      "fichier": "uploads/MAYALA_CV_cv_etudiant_ats.pdf",
+      "date_ajout": "2025-06-16"
+    }
+  ]
+}
