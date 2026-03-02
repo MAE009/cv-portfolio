@@ -6,6 +6,17 @@
     <title>Administration - MAYALA CV Portfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script>
+        // PROTECTION ADMIN - À METTRE DANS LES BALISES SCRIPT
+        (function() {
+            const password = prompt('🔐 Entrez le mot de passe admin :');
+            // Changez 'votre-mot-de-passe' par le vrai mot de passe
+            if (password !== 'admin123') {
+                alert('Mot de passe incorrect !');
+                window.location.href = 'index.html';
+            }
+        })();
+    </script>
 </head>
 <body>
     <nav class="navbar">

@@ -1,9 +1,14 @@
 // ===== CONFIGURATION DE L'API =====
 const API_URL = 'https://cv-portfolio-api-29ui.onrender.com';
 
-// ===== FONCTIONS API =====
+// ===== VARIABLES GLOBALES =====
+let cvData = { cvs: [] };
+let currentEditId = null;
+let currentPage = 1;
+const itemsPerPage = 9;
+let formModifie = false;  // Pour détecter les modifications non sauvegardées
 
-// Charger tous les CV depuis l'API
+// ===== FONCTIONS API =====
 async function loadCVs() {
     try {
         const response = await fetch(`${API_URL}/cvs`);
@@ -16,7 +21,6 @@ async function loadCVs() {
     }
 }
 
-// Ajouter un CV
 async function addCV(cv) {
     try {
         const response = await fetch(`${API_URL}/cvs`, {
@@ -31,7 +35,6 @@ async function addCV(cv) {
     }
 }
 
-// Modifier un CV
 async function updateCV(id, cv) {
     try {
         const response = await fetch(`${API_URL}/cvs/${id}`, {
@@ -46,7 +49,6 @@ async function updateCV(id, cv) {
     }
 }
 
-// Supprimer un CV
 async function deleteCV(id) {
     try {
         await fetch(`${API_URL}/cvs/${id}`, {
@@ -58,10 +60,6 @@ async function deleteCV(id) {
     }
 }
 
-// ===== VARIABLES GLOBALES =====
-let cvData = { cvs: [] };
-let currentEditId = null;
-
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Page chargée, connexion à API:', API_URL);
@@ -72,18 +70,24 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     if (document.getElementById('liste-cv')) {
         afficherCVAccueil();
-        setupFiltres();
+        setupFiltresEtTri();
     }
 
     if (document.getElementById('admin-liste-cv')) {
         afficherCVAdmin();
         setupFormulaire();
         setupDragAndDrop();
+
+        // Détection des modifications non sauvegardées
+        document.querySelectorAll('#cv-form input, #cv-form select, #cv-form textarea').forEach(input => {
+            input.addEventListener('change', () => { formModifie = true; });
+            input.addEventListener('input', () => { formModifie = true; });
+        });
     }
 });
 
 // ===== FONCTIONS PAGE ACCUEIL =====
-function afficherCVAccueil() {
+function afficherCVAccueil(page = 1) {
     const container = document.getElementById('liste-cv');
     if (!container) return;
 
@@ -99,7 +103,12 @@ function afficherCVAccueil() {
         return;
     }
 
-    cvData.cvs.forEach(cv => {
+    // Pagination
+    const start = (page - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginatedCVs = cvData.cvs.slice(start, end);
+
+    paginatedCVs.forEach(cv => {
         const cvCard = document.createElement('div');
         cvCard.className = 'cv-card';
         cvCard.innerHTML = `
@@ -119,13 +128,46 @@ function afficherCVAccueil() {
                     <i class="fas fa-calendar-alt"></i>
                     <span>Ajouté le ${formatDate(cv.date_ajout)}</span>
                 </div>
-                <button class="btn-view" onclick="window.open('${cv.fichier || '#'}', '_blank')">
+                <button class="btn-view" onclick="ouvrirPDF('${cv.fichier}')">
                     <i class="fas fa-eye"></i> Voir le CV
                 </button>
             </div>
         `;
         container.appendChild(cvCard);
     });
+
+    afficherPagination();
+}
+
+function ouvrirPDF(url) {
+    if (!url || url === '#') {
+        alert('Fichier PDF non disponible');
+        return;
+    }
+    window.open(url, '_blank');
+}
+
+function afficherPagination() {
+    const paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) return;
+
+    const totalPages = Math.ceil(cvData.cvs.length / itemsPerPage);
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '<div class="pagination-controls">';
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changerPage(${i})">${i}</button>`;
+    }
+    html += '</div>';
+    paginationContainer.innerHTML = html;
+}
+
+function changerPage(page) {
+    currentPage = page;
+    afficherCVAccueil(page);
 }
 
 function formatDate(dateString) {
@@ -138,34 +180,49 @@ function formatDate(dateString) {
     }
 }
 
-function setupFiltres() {
+function setupFiltresEtTri() {
     const filtreType = document.getElementById('filtre-type');
+    const tri = document.getElementById('tri');
     const recherche = document.getElementById('recherche');
 
     if (filtreType) {
-        filtreType.addEventListener('change', filtrerCV);
+        filtreType.addEventListener('change', appliquerFiltresEtTri);
     }
-
+    if (tri) {
+        tri.addEventListener('change', appliquerFiltresEtTri);
+    }
     if (recherche) {
-        recherche.addEventListener('input', filtrerCV);
+        recherche.addEventListener('input', appliquerFiltresEtTri);
     }
 }
 
-function filtrerCV() {
+function appliquerFiltresEtTri() {
     const type = document.getElementById('filtre-type').value;
+    const tri = document.getElementById('tri').value;
     const recherche = document.getElementById('recherche').value.toLowerCase();
 
-    const container = document.getElementById('liste-cv');
-    container.innerHTML = '';
-
-    if (!cvData.cvs) return;
-
-    const cvsFiltres = cvData.cvs.filter(cv => {
+    // Filtrer
+    let cvsFiltres = cvData.cvs.filter(cv => {
         const matchType = type === 'tous' || cv.type === type;
         const matchRecherche = (cv.nom || '').toLowerCase().includes(recherche) ||
                               (cv.entreprise || '').toLowerCase().includes(recherche);
         return matchType && matchRecherche;
     });
+
+    // Trier
+    if (tri === 'date_desc') {
+        cvsFiltres.sort((a, b) => new Date(b.date_ajout) - new Date(a.date_ajout));
+    } else if (tri === 'date_asc') {
+        cvsFiltres.sort((a, b) => new Date(a.date_ajout) - new Date(b.date_ajout));
+    } else if (tri === 'nom_asc') {
+        cvsFiltres.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+    } else if (tri === 'nom_desc') {
+        cvsFiltres.sort((a, b) => (b.nom || '').localeCompare(a.nom || ''));
+    }
+
+    // Afficher
+    const container = document.getElementById('liste-cv');
+    container.innerHTML = '';
 
     if (cvsFiltres.length === 0) {
         container.innerHTML = `
@@ -267,7 +324,6 @@ function setupFormulaire() {
                 return;
             }
 
-            // Simuler le chemin du fichier
             const fichierPath = fichier ? `uploads/${fichier.name}` : 'uploads/default.pdf';
 
             const cvDataToSave = {
@@ -281,23 +337,19 @@ function setupFormulaire() {
 
             try {
                 if (currentEditId) {
-                    // MODIFICATION
                     await updateCV(currentEditId, { ...cvDataToSave, id: currentEditId });
                     alert('✅ CV modifié avec succès !');
                 } else {
-                    // AJOUT
                     await addCV(cvDataToSave);
                     alert('✅ CV ajouté avec succès !');
                 }
 
-                // Recharger les données depuis l'API
                 cvData = await loadCVs();
-
-                // Réinitialiser et rafraîchir
                 resetFormulaire();
                 afficherCVAdmin();
                 updateAllViews();
 
+                formModifie = false;
                 document.getElementById('form-title').innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter un nouveau CV';
             } catch (error) {
                 alert('❌ Erreur lors de l\'enregistrement');
@@ -315,14 +367,9 @@ async function supprimerCV(id) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce CV ?')) {
         try {
             await deleteCV(id);
-
-            // Recharger les données depuis l'API
             cvData = await loadCVs();
-
-            // Mettre à jour les vues
             afficherCVAdmin();
             updateAllViews();
-
             alert('✅ CV supprimé avec succès !');
         } catch (error) {
             alert('❌ Erreur lors de la suppression');
@@ -353,8 +400,8 @@ function modifierCV(id) {
     }
 
     currentEditId = id;
+    formModifie = true;
 
-    // Scroll vers le formulaire
     const formCard = document.querySelector('.form-card');
     if (formCard) {
         formCard.scrollIntoView({ behavior: 'smooth' });
@@ -378,17 +425,27 @@ function resetFormulaire() {
     }
 
     currentEditId = null;
+    formModifie = false;
 }
 
 function updateAllViews() {
     if (document.getElementById('liste-cv')) {
         if (document.getElementById('filtre-type')) {
-            filtrerCV();
+            appliquerFiltresEtTri();
         } else {
-            afficherCVAccueil();
+            afficherCVAccueil(currentPage);
         }
     }
 }
+
+// Protection avant de quitter avec modifications non sauvegardées
+window.addEventListener('beforeunload', function(e) {
+    if (formModifie) {
+        e.preventDefault();
+        e.returnValue = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter ?';
+        return e.returnValue;
+    }
+});
 
 // ===== DRAG & DROP =====
 function setupDragAndDrop() {
@@ -432,6 +489,7 @@ function setupDragAndDrop() {
         if (files.length > 0) {
             fileInput.files = files;
             updateFileInfo(files[0]);
+            formModifie = true;
         }
     }
 
@@ -442,6 +500,7 @@ function setupDragAndDrop() {
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
             updateFileInfo(fileInput.files[0]);
+            formModifie = true;
         }
     });
 
@@ -455,3 +514,37 @@ function setupDragAndDrop() {
         }
     }
 }
+
+// Styles pour la pagination (à ajouter dans style.css)
+const paginationStyles = `
+.pagination {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+}
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+.btn-page {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--primary);
+    background: white;
+    color: var(--primary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+.btn-page:hover,
+.btn-page.active {
+    background: var(--gradient);
+    color: white;
+    border-color: transparent;
+}
+`;
+
+// Ajouter les styles de pagination
+const styleSheet = document.createElement("style");
+styleSheet.innerText = paginationStyles;
+document.head.appendChild(styleSheet);
