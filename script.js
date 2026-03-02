@@ -1,52 +1,74 @@
-// ===== GESTION DE LA PERSISTANCE DES DONNÉES =====
-// Remplacez la variable cvData par des appels API
+// ===== CONFIGURATION DE L'API =====
 const API_URL = 'https://cv-portfolio-api-29ui.onrender.com';
 
-// Charger les données depuis le localStorage ou utiliser les données par défaut
-function loadCVData() {
-    const savedData = localStorage.getItem('cvData');
-    if (savedData) {
-        return JSON.parse(savedData);
-    } else {
-        // Données par défaut depuis cv.json
-        return {
-            cvs: [
-                {
-                    id: 1,
-                    nom: "MAYALA Armand Emmanuel",
-                    type: "Moderne",
-                    entreprise: "TechCorp",
-                    description: "CV moderne avec une approche design et des compétences techniques.",
-                    fichier: "uploads/MAYALA_CV_cv_etudiant.pdf",
-                    date_ajout: "2025-06-15"
-                },
-                {
-                    id: 2,
-                    nom: "MAYALA Armand Emmanuel",
-                    type: "ATS",
-                    entreprise: "FinancePlus",
-                    description: "CV optimisé pour les systèmes ATS, parfait pour les grandes entreprises.",
-                    fichier: "uploads/MAYALA_CV_cv_etudiant_ats.pdf",
-                    date_ajout: "2025-06-16"
-                }
-            ]
-        };
+// ===== FONCTIONS API =====
+
+// Charger tous les CV depuis l'API
+async function loadCVs() {
+    try {
+        const response = await fetch(`${API_URL}/cvs`);
+        if (!response.ok) throw new Error('Erreur chargement');
+        const data = await response.json();
+        return { cvs: data };
+    } catch (error) {
+        console.error('Erreur chargement CV:', error);
+        return { cvs: [] };
     }
 }
 
-// Sauvegarder les données dans le localStorage
-function saveCVData() {
-    localStorage.setItem('cvData', JSON.stringify(cvData));
-    console.log('Données sauvegardées:', cvData); // Pour déboguer
+// Ajouter un CV
+async function addCV(cv) {
+    try {
+        const response = await fetch(`${API_URL}/cvs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cv)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur ajout CV:', error);
+        throw error;
+    }
 }
 
-// Initialiser les données
-let cvData = loadCVData();
+// Modifier un CV
+async function updateCV(id, cv) {
+    try {
+        const response = await fetch(`${API_URL}/cvs/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cv)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur modification CV:', error);
+        throw error;
+    }
+}
+
+// Supprimer un CV
+async function deleteCV(id) {
+    try {
+        await fetch(`${API_URL}/cvs/${id}`, {
+            method: 'DELETE'
+        });
+    } catch (error) {
+        console.error('Erreur suppression CV:', error);
+        throw error;
+    }
+}
+
+// ===== VARIABLES GLOBALES =====
+let cvData = { cvs: [] };
 let currentEditId = null;
 
 // ===== INITIALISATION =====
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page chargée, données chargées:', cvData);
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Page chargée, connexion à API:', API_URL);
+
+    // Charger les données depuis l'API
+    cvData = await loadCVs();
+    console.log('Données chargées:', cvData);
 
     if (document.getElementById('liste-cv')) {
         afficherCVAccueil();
@@ -58,44 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setupFormulaire();
         setupDragAndDrop();
     }
-
-    // Pour déboguer : afficher les données dans la console
-    console.log('CV disponibles:', cvData.cvs.length);
 });
-
-
-// Charger les CV
-async function loadCVs() {
-  const response = await fetch(`${API_URL}/cvs`);
-  return await response.json();
-}
-
-// Ajouter un CV
-async function addCV(cv) {
-  const response = await fetch(`${API_URL}/cvs`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(cv)
-  });
-  return await response.json();
-}
-
-// Modifier un CV
-async function updateCV(id, cv) {
-  const response = await fetch(`${API_URL}/cvs/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(cv)
-  });
-  return await response.json();
-}
-
-// Supprimer un CV
-async function deleteCV(id) {
-  await fetch(`${API_URL}/cvs/${id}`, {
-    method: 'DELETE'
-  });
-}
 
 // ===== FONCTIONS PAGE ACCUEIL =====
 function afficherCVAccueil() {
@@ -104,7 +89,7 @@ function afficherCVAccueil() {
 
     container.innerHTML = '';
 
-    if (cvData.cvs.length === 0) {
+    if (!cvData.cvs || cvData.cvs.length === 0) {
         container.innerHTML = `
             <div class="no-results">
                 <i class="fas fa-file-alt"></i>
@@ -119,22 +104,22 @@ function afficherCVAccueil() {
         cvCard.className = 'cv-card';
         cvCard.innerHTML = `
             <div class="cv-card-header">
-                <h3 class="cv-name">${cv.nom}</h3>
-                <span class="cv-badge badge-${cv.type.toLowerCase()}">${cv.type}</span>
+                <h3 class="cv-name">${cv.nom || 'Nom inconnu'}</h3>
+                <span class="cv-badge badge-${(cv.type || 'moderne').toLowerCase()}">${cv.type || 'Moderne'}</span>
             </div>
             <div class="cv-card-body">
                 <div class="cv-company">
                     <i class="fas fa-building"></i>
-                    <span>${cv.entreprise}</span>
+                    <span>${cv.entreprise || 'Entreprise inconnue'}</span>
                 </div>
-                <p class="cv-description">${cv.description}</p>
+                <p class="cv-description">${cv.description || 'Description non disponible'}</p>
             </div>
             <div class="cv-footer">
                 <div class="cv-date">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Ajouté le ${formatDate(cv.date_ajout)}</span>
                 </div>
-                <button class="btn-view" onclick="window.open('${cv.fichier}', '_blank')">
+                <button class="btn-view" onclick="window.open('${cv.fichier || '#'}', '_blank')">
                     <i class="fas fa-eye"></i> Voir le CV
                 </button>
             </div>
@@ -145,8 +130,12 @@ function afficherCVAccueil() {
 
 function formatDate(dateString) {
     if (!dateString) return 'Date inconnue';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
+    try {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('fr-FR', options);
+    } catch {
+        return dateString;
+    }
 }
 
 function setupFiltres() {
@@ -169,10 +158,12 @@ function filtrerCV() {
     const container = document.getElementById('liste-cv');
     container.innerHTML = '';
 
+    if (!cvData.cvs) return;
+
     const cvsFiltres = cvData.cvs.filter(cv => {
         const matchType = type === 'tous' || cv.type === type;
-        const matchRecherche = cv.nom.toLowerCase().includes(recherche) ||
-                              cv.entreprise.toLowerCase().includes(recherche);
+        const matchRecherche = (cv.nom || '').toLowerCase().includes(recherche) ||
+                              (cv.entreprise || '').toLowerCase().includes(recherche);
         return matchType && matchRecherche;
     });
 
@@ -222,7 +213,7 @@ function afficherCVAdmin() {
 
     container.innerHTML = '';
 
-    if (cvData.cvs.length === 0) {
+    if (!cvData.cvs || cvData.cvs.length === 0) {
         container.innerHTML = `
             <div class="no-results">
                 <i class="fas fa-folder-open"></i>
@@ -262,7 +253,7 @@ function setupFormulaire() {
     const btnAnnuler = document.getElementById('btn-annuler');
 
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const nom = document.getElementById('nom').value.trim();
@@ -276,65 +267,42 @@ function setupFormulaire() {
                 return;
             }
 
-            if (!type) {
-                alert('❌ Veuillez sélectionner un type de CV');
-                return;
-            }
-
             // Simuler le chemin du fichier
             const fichierPath = fichier ? `uploads/${fichier.name}` : 'uploads/default.pdf';
 
-            if (currentEditId) {
-                // MODIFICATION
-                const index = cvData.cvs.findIndex(cv => cv.id === currentEditId);
-                if (index !== -1) {
-                    cvData.cvs[index] = {
-                        id: currentEditId,
-                        nom: nom,
-                        type: type,
-                        entreprise: entreprise,
-                        description: description,
-                        fichier: fichier ? fichierPath : cvData.cvs[index].fichier,
-                        date_ajout: new Date().toISOString().split('T')[0]
-                    };
+            const cvDataToSave = {
+                nom,
+                type,
+                entreprise,
+                description,
+                fichier: fichierPath,
+                date_ajout: new Date().toISOString().split('T')[0]
+            };
 
-                    // Sauvegarder immédiatement
-                    saveCVData();
-
+            try {
+                if (currentEditId) {
+                    // MODIFICATION
+                    await updateCV(currentEditId, { ...cvDataToSave, id: currentEditId });
                     alert('✅ CV modifié avec succès !');
-                    document.getElementById('form-title').innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter un nouveau CV';
+                } else {
+                    // AJOUT
+                    await addCV(cvDataToSave);
+                    alert('✅ CV ajouté avec succès !');
                 }
-            } else {
-                // AJOUT
-                const newId = cvData.cvs.length > 0 ? Math.max(...cvData.cvs.map(c => c.id)) + 1 : 1;
-                const newCV = {
-                    id: newId,
-                    nom: nom,
-                    type: type,
-                    entreprise: entreprise,
-                    description: description,
-                    fichier: fichierPath,
-                    date_ajout: new Date().toISOString().split('T')[0]
-                };
 
-                cvData.cvs.push(newCV);
+                // Recharger les données depuis l'API
+                cvData = await loadCVs();
 
-                // Sauvegarder immédiatement
-                saveCVData();
-
-                alert('✅ CV ajouté avec succès !');
-            }
-
-            // Réinitialiser et rafraîchir
-            resetFormulaire();
-
-            // Mettre à jour les deux vues
-            if (document.getElementById('admin-liste-cv')) {
+                // Réinitialiser et rafraîchir
+                resetFormulaire();
                 afficherCVAdmin();
-            }
+                updateAllViews();
 
-            // Vérifier si on est sur la page d'accueil via une autre fonction
-            updateAllViews();
+                document.getElementById('form-title').innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter un nouveau CV';
+            } catch (error) {
+                alert('❌ Erreur lors de l\'enregistrement');
+                console.error(error);
+            }
         });
     }
 
@@ -343,42 +311,24 @@ function setupFormulaire() {
     }
 }
 
-// Nouvelle fonction pour mettre à jour toutes les vues
-function updateAllViews() {
-    // Mettre à jour la page d'accueil si on y est
-    if (document.getElementById('liste-cv')) {
-        if (document.getElementById('filtre-type')) {
-            filtrerCV();
-        } else {
-            afficherCVAccueil();
+async function supprimerCV(id) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce CV ?')) {
+        try {
+            await deleteCV(id);
+
+            // Recharger les données depuis l'API
+            cvData = await loadCVs();
+
+            // Mettre à jour les vues
+            afficherCVAdmin();
+            updateAllViews();
+
+            alert('✅ CV supprimé avec succès !');
+        } catch (error) {
+            alert('❌ Erreur lors de la suppression');
+            console.error(error);
         }
     }
-
-    // Mettre à jour la page admin si on y est
-    if (document.getElementById('admin-liste-cv')) {
-        afficherCVAdmin();
-    }
-
-    console.log('Vues mises à jour, données actuelles:', cvData);
-}
-
-function resetFormulaire() {
-    document.getElementById('cv-form').reset();
-    document.getElementById('cv-id').value = '';
-    document.getElementById('fichier').value = '';
-
-    const formTitle = document.getElementById('form-title');
-    if (formTitle) {
-        formTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter un nouveau CV';
-    }
-
-    const fileInfo = document.getElementById('file-info');
-    if (fileInfo) {
-        fileInfo.classList.remove('active');
-        fileInfo.innerHTML = '';
-    }
-
-    currentEditId = null;
 }
 
 function modifierCV(id) {
@@ -411,21 +361,32 @@ function modifierCV(id) {
     }
 }
 
-function supprimerCV(id) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce CV ?')) {
-        cvData.cvs = cvData.cvs.filter(cv => cv.id !== id);
+function resetFormulaire() {
+    document.getElementById('cv-form').reset();
+    document.getElementById('cv-id').value = '';
+    document.getElementById('fichier').value = '';
 
-        // Sauvegarder après suppression
-        saveCVData();
+    const formTitle = document.getElementById('form-title');
+    if (formTitle) {
+        formTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter un nouveau CV';
+    }
 
-        // Mettre à jour les vues
-        if (document.getElementById('admin-liste-cv')) {
-            afficherCVAdmin();
+    const fileInfo = document.getElementById('file-info');
+    if (fileInfo) {
+        fileInfo.classList.remove('active');
+        fileInfo.innerHTML = '';
+    }
+
+    currentEditId = null;
+}
+
+function updateAllViews() {
+    if (document.getElementById('liste-cv')) {
+        if (document.getElementById('filtre-type')) {
+            filtrerCV();
+        } else {
+            afficherCVAccueil();
         }
-
-        updateAllViews();
-
-        alert('✅ CV supprimé avec succès !');
     }
 }
 
@@ -437,7 +398,6 @@ function setupDragAndDrop() {
 
     if (!dropZone || !fileInput) return;
 
-    // Empêcher le comportement par défaut
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
@@ -447,7 +407,6 @@ function setupDragAndDrop() {
         e.stopPropagation();
     }
 
-    // Surligner la zone
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, highlight, false);
     });
@@ -464,7 +423,6 @@ function setupDragAndDrop() {
         dropZone.classList.remove('dragover');
     }
 
-    // Gérer le drop
     dropZone.addEventListener('drop', handleDrop, false);
 
     function handleDrop(e) {
@@ -477,7 +435,6 @@ function setupDragAndDrop() {
         }
     }
 
-    // Gérer la sélection par clic
     dropZone.addEventListener('click', () => {
         fileInput.click();
     });
@@ -498,29 +455,3 @@ function setupDragAndDrop() {
         }
     }
 }
-
-// ===== BOUTON POUR EXPORTER LES DONNÉES (optionnel) =====
-function exporterDonnees() {
-    const dataStr = JSON.stringify(cvData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-
-    const exportFileDefaultName = 'cv_data_export.json';
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-}
-
-// ===== BOUTON POUR RÉINITIALISER (optionnel) =====
-function resetToDefault() {
-    if (confirm('Réinitialiser avec les CV par défaut ? Toutes vos modifications seront perdues.')) {
-        localStorage.removeItem('cvData');
-        cvData = loadCVData();
-        updateAllViews();
-        alert('Données réinitialisées !');
-    }
-}
-
-// Ajouter des boutons d'export/réinitialisation dans la console pour les tests
-console.log('Fonctions disponibles: exporterDonnees(), resetToDefault()');
